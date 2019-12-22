@@ -2,8 +2,8 @@
 # MacVersion = 0.1
 # MacDescription = Create banners for your founds
 # MacAuthor = CachingFoX
-# MacFileName = banners.gsk
-# MacUrl =
+# MacFileName = banner.gsk
+# MacUrl = https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banner.gsk
 #*******************************************
 
 $BannerData = $_CurrentDataPath + "\banners.csv"
@@ -24,15 +24,6 @@ IF FileExists( $BannerData ) = False
     ENDIF
   ENDIF  
 ENDIF
-
-
-$Data = AppendFile($_AppData + "\test.txt","Some saved Setting")
-IF Equal(Left($Data,7),"*Error*")
-  Pause Msg="$Data"
-  Cancel
-ENDIF
-
-
 
 $data = GetFile($BannerData)
 $rows = Val(CsvGet($data,"rows"))
