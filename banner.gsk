@@ -1,0 +1,59 @@
+#*******************************************
+# MacVersion = 0.1
+# MacDescription = Create banners for your founds
+# MacAuthor = CachingFoX
+# MacFileName = banners.gsk
+# MacUrl =
+#*******************************************
+
+$BannerData = $_CurrentDataPath + "\banners.csv"
+$OutputFile = $_CurrentDataPath + "\banners.html"
+
+# Download data
+IF FileExists( $BannerData ) = False
+  MsgOk msg="Download banners.csv"
+  $Data = GetUrl("https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banners.csv")
+  IF Equal(Left($Data,7),"*error*")
+	MsgOk msg=$data
+	Cancel
+  ELSE
+	$Result = PutFile($BannerData,$Data)
+	IF Left($Result,7) = "*Error*"
+	  Pause Msg="$Result"
+	  Cancel
+    ENDIF
+  ENDIF  
+ENDIF
+
+
+$Data = AppendFile($_AppData + "\test.txt","Some saved Setting")
+IF Equal(Left($Data,7),"*Error*")
+  Pause Msg="$Data"
+  Cancel
+ENDIF
+
+
+
+$data = GetFile($BannerData)
+$rows = Val(CsvGet($data,"rows"))
+$x = 1
+REPEAT
+  $x = $x + 1
+  $gccode = CsvGet("*","$x,1")
+  $img = CsvGet("*","$x,2")
+  $link = CsvGet("*","$x,3")
+  IF IsEmpty($link) = True
+    $link = "https://coord.info/"+$gccode
+  ENDIF
+  $width = CsvGet("*","$x,4")
+  $height = CsvGet("*","$x,5")
+  $style=""
+  IF IsEmpty($width) = False 
+    $style = $style + "width:"+$width+"px;"
+  ENDIF
+  IF IsEmpty($height) = False 
+    $style = $style + "height:"+$height+"px;"
+  ENDIF
+  $a = "<a href="+quote($link)+" target="+quote("_blank")+"><img src="+quote($img)+" style="+quote($style)+"/></a>"
+  $r = AppendFile($OutputFile,$a)
+UNTIL $x = $rows
