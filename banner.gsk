@@ -8,11 +8,20 @@
 
 $BannerData = $_CurrentDataPath + "\banners.csv"
 $OutputFile = $_CurrentDataPath + "\banners.html"
+$UrlBannerData = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banners.csv"
+
+<data> VarName=$HtmlBannerFragmentTemplate
+<p style="text-align:center;">
+  <a href="%LINK%" target="_blank">
+    <img src="%IMGURL%" style="%STYLE%" title="%TITLE%" alt="%ALT%"/>
+  </a>
+</p>
+<enddata>
 
 # Download data
 IF FileExists( $BannerData ) = False
   MsgOk msg="Download banners.csv"
-  $Data = GetUrl("https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banners.csv")
+  $Data = GetUrl($UrlBannerData)
   IF Equal(Left($Data,7),"*error*")
 	MsgOk msg=$data
 	Cancel
@@ -25,6 +34,7 @@ IF FileExists( $BannerData ) = False
   ENDIF  
 ENDIF
 
+FILEERASE File=$OutputFile OnError=Continue
 $data = GetFile($BannerData)
 $rows = Val(CsvGet($data,"rows"))
 $x = 1
@@ -33,6 +43,7 @@ REPEAT
   $gccode = CsvGet("*","$x,1")
   $img = CsvGet("*","$x,2")
   $link = CsvGet("*","$x,3")
+
   IF IsEmpty($link) = True
     $link = "https://coord.info/"+$gccode
   ENDIF
@@ -45,6 +56,11 @@ REPEAT
   IF IsEmpty($height) = False 
     $style = $style + "height:"+$height+"px;"
   ENDIF
-  $a = "<a href="+quote($link)+" target="+quote("_blank")+"><img src="+quote($img)+" style="+quote($style)+"/></a>"
-  $r = AppendFile($OutputFile,$a)
+  $style = $style + CsvGet("*","$x,5")
+
+  $html = $HtmlBannerFragmentTemplate
+  $html = Replace("%LINK%",$link,$html)
+  $html = Replace("%IMGURL%",$img,$html)
+  $html = Replace("%STYLE%",$style,$html)
+  $r = AppendFile($OutputFile,$html)
 UNTIL $x = $rows
