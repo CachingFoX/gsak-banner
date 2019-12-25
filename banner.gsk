@@ -7,7 +7,7 @@
 #*******************************************
 
 $BannerData = $_CurrentDataPath + "\banners.csv"
-$OutputFile = $_CurrentDataPath + "\banners.html"
+$OutputFile = "Z:\gsak-banner\banner.html" # $_CurrentDataPath + "\banners.html"
 $UrlBannerData = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banners.csv"
 
 <data> VarName=$HtmlBannerFragmentTemplate
@@ -23,8 +23,8 @@ IF FileExists( $BannerData ) = False
   MsgOk msg="Download banners.csv"
   $Data = GetUrl($UrlBannerData)
   IF Equal(Left($Data,7),"*error*")
-	MsgOk msg=$data
-	Cancel
+	  MsgOk msg=$data
+	  Cancel
   ELSE
 	$Result = PutFile($BannerData,$Data)
 	IF Left($Result,7) = "*Error*"
@@ -37,6 +37,8 @@ ENDIF
 FILEERASE File=$OutputFile OnError=Continue
 $data = GetFile($BannerData)
 $rows = Val(CsvGet($data,"rows"))
+$a = CsvGet("*","1,")
+MsgOk msg=$a
 $x = 1
 REPEAT
   $x = $x + 1
