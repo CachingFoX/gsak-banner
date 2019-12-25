@@ -15,6 +15,7 @@
 <enddata>
 
 $OutputFile = "Z:\gsak-banner\banner.html" # $_CurrentDataPath + "\banners.html"
+$OutputFileAll = "Z:\gsak-banner\banner-all.html" # $_CurrentDataPath + "\banners-all.html"
 
 $BannerDataUrlUrl = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/data/banners.csv"
 $BannerListFile = $_AppData + "\banner-list.csv"
@@ -42,6 +43,7 @@ ELSE
         MsgOk msg=$data
         CANCEL
       ELSE
+        FILEERASE File=$BannerListFile OnError=Continue
         $status = PutFile($BannerListFile,$data)
         IF Equal(Left($data,7),"*error*")
           MsgOk msg=$status
@@ -55,13 +57,79 @@ ELSE
   ENDIF
 ENDIF
 
+# import data into the database
+<data> VarName=$sqlBannerTable
+DROP TABLE IF EXISTS bannerlist;
+CREATE TABLE bannerlist (
+    code varchar(12),
+    imageUrl varchar(255),
+    linkUrl varchar(255),
+    width int,
+    height int,
+    style varchar(255)
+);
+<enddata>
+
+
+
 $data = GetFile($BannerListFile)
 IF Equal(Left($data,7),"*error*")
   MsgOk msg=$status
   CANCEL
+ELSE
+
+  $status = sqlite("sql",$sqlBannerTable,"sqlget=0")
+  #$status = sqlite("sql","END TRANSACTION","halt=Trap")
+  $status = sqlite("import",$data,"table=bannerlist delim=,")
+  $status = sqlite("sql","DELETE FROM bannerlist WHERE code='code';")
+  $status = sqlite("sql","SELECT count(*) FROM bannerlist")
+  $msg = "Import a list of "+$status+" banners into the database"
+  MsgOk msg=$msg
 ENDIF
 
+<data> VarName=$sqlYourBanners
+SELECT * FROM Caches
+INNER JOIN bannerlist
+ON Caches.Code = bannerlist.code
+WHERE Caches.Found >= 1
+ORDER BY FoundByMeDate ASC
+<enddata>
+
 FILEERASE File=$OutputFile OnError=Continue
+$Status = sqlite("sql",$sqlYourBanners,"sqlget=0")
+while not($_sqleol)
+  $gccode = sqlget("code")
+  $link = ""
+  IF IsEmpty($link) = True
+    $link = "https://coord.info/"+$gccode
+  ENDIF
+  $width = sqlget("width")
+  $height = sqlget("height")
+  $style=""
+  IF IsEmpty($width) = False 
+    $style = $style + "width:"+$width+"px;"
+  ENDIF
+  IF IsEmpty($height) = False 
+    $style = $style + "height:"+$height+"px;"
+  ENDIF
+  $style = $style + sqlget("style")
+  $img = sqlget("imageUrl")
+
+  $title = sqlget("name")+" ("+$gccode+")"
+  $alt = "Banner for "+$title
+
+  $html = $HtmlBannerFragmentTemplate
+  $html = Replace("%LINK%",$link,$html)
+  $html = Replace("%IMGURL%",$img,$html)
+  $html = Replace("%STYLE%",$style,$html)
+  $html = Replace("%ALT%",$alt,$html)
+  $html = Replace("%TITLE%",$title,$html)
+  $r = AppendFile($OutputFile,$html)
+
+  sqlnext
+Endwhile
+
+FILEERASE File=$OutputFileAll OnError=Continue
 $rows = Val(CsvGet($data,"rows"))
 $x = 1
 REPEAT
@@ -82,7 +150,7 @@ REPEAT
   IF IsEmpty($height) = False 
     $style = $style + "height:"+$height+"px;"
   ENDIF
-  $style = $style + CsvGet("*","$x,5")
+  $style = $style + CsvGet("*","$x,6")
 
   $html = $HtmlBannerFragmentTemplate
   $html = Replace("%LINK%",$link,$html)
@@ -90,5 +158,5 @@ REPEAT
   $html = Replace("%STYLE%",$style,$html)
   $html = Replace("%ALT%",$gccode,$html)
   $html = Replace("%TITLE%",$gccode,$html)
-  $r = AppendFile($OutputFile,$html)
+  $r = AppendFile($OutputFileAll,$html)
 UNTIL $x = $rows
