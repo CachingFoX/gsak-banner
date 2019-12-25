@@ -77,7 +77,6 @@ IF Equal(Left($data,7),"*error*")
   MsgOk msg=$status
   CANCEL
 ELSE
-
   $status = sqlite("sql",$sqlBannerTable,"sqlget=0")
   #$status = sqlite("sql","END TRANSACTION","halt=Trap")
   $status = sqlite("import",$data,"table=bannerlist delim=,")
@@ -96,6 +95,18 @@ ORDER BY FoundByMeDate ASC
 <enddata>
 
 FILEERASE File=$OutputFile OnError=Continue
+
+# Special Banner: "Ich habe das Listing gelesen/International Space Station"
+#   Banner without found
+$html = $HtmlBannerFragmentTemplate
+$html = Replace("%LINK%","https://coord.info/GC1BE91",$html)
+$html = Replace("%IMGURL%","https://d1u1p2xjjiahg3.cloudfront.net/33cdfdfc-3386-4ebf-8c63-694bf45b5c68.gif",$html)
+$html = Replace("%STYLE%","",$html)
+$html = Replace("%ALT%","Banner for International Space Station (GC1BE91)",$html)
+$html = Replace("%TITLE%","International Space Station (GC1BE91)",$html)
+$r = AppendFile($OutputFile,$html)
+
+
 $Status = sqlite("sql",$sqlYourBanners,"sqlget=0")
 while not($_sqleol)
   $gccode = sqlget("code")
