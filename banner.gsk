@@ -6,10 +6,6 @@
 # MacUrl = https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banner.gsk
 #*******************************************
 
-$BannerData = $_CurrentDataPath + "\banners.csv"
-$OutputFile = "Z:\gsak-banner\banner.html" # $_CurrentDataPath + "\banners.html"
-$UrlBannerData = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banners.csv"
-
 <data> VarName=$HtmlBannerFragmentTemplate
 <p style="text-align:center;">
   <a href="%LINK%" target="_blank">
@@ -18,24 +14,54 @@ $UrlBannerData = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/maste
 </p>
 <enddata>
 
-# Download data
-IF FileExists( $BannerData ) = False
-  MsgOk msg="Download banners.csv"
-  $Data = GetUrl($UrlBannerData)
-  IF Equal(Left($Data,7),"*error*")
-	  MsgOk msg=$data
-	  Cancel
-  ELSE
-	$Result = PutFile($BannerData,$Data)
-	IF Left($Result,7) = "*Error*"
-	  Pause Msg="$Result"
-	  Cancel
+$OutputFile = "Z:\gsak-banner\banner.html" # $_CurrentDataPath + "\banners.html"
+
+$BannerDataUrlUrl = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/data/banners.csv"
+$BannerListFile = $_AppData + "\banner-list.csv"
+$BannerListFingerprintUrl = "https://api.github.com/repos/CachingFoX/gsak-banner/contents/data"
+$BannerListFingerprintFile = $_AppData + "\banner-list.fingerprint"
+
+$metadata = GetUrl($BannerListFingerprintUrl)
+IF Equal(Left($metadata,7),"*error*")
+  MsgOk msg="Cannot load metainfo "+$metadata
+  Cancel
+ELSE
+  $expression = quote("size")+"\s*:\s*\d*"
+  $match = RegExData($expression,$metadata,0)
+  $size = RegExData("\d*",$match,0)
+
+  $expression = quote("sha")+"\s*:\s*"+quote("[0-9a-f]+")
+  $match = RegExData($expression,$metadata,0)
+  $fingerprint = RegExData("[0-9a-f]+",$match,0)
+
+  $current_fingerprint = GetFile($BannerListFingerprintFile)
+  IF Left($current_fingerprint,7) = "*Error*" OR $current_fingerprint <> $fingerprint
+    IF YesNo("Newer banner list is available. Do you want to download it? (size: "+$size+" bytes)" )
+      $data = GetUrl($BannerDataUrlUrl)
+      IF Equal(Left($data,7),"*error*")
+        MsgOk msg=$data
+        CANCEL
+      ELSE
+        $status = PutFile($BannerListFile,$data)
+        IF Equal(Left($data,7),"*error*")
+          MsgOk msg=$status
+          CANCEL
+        ELSE
+          $status = PutFile($BannerListFingerprintFile,$fingerprint)
+        ENDIF
+      ENDIF
+    ELSE
     ENDIF
-  ENDIF  
+  ENDIF
+ENDIF
+
+$data = GetFile($BannerListFile)
+IF Equal(Left($data,7),"*error*")
+  MsgOk msg=$status
+  CANCEL
 ENDIF
 
 FILEERASE File=$OutputFile OnError=Continue
-$data = GetFile($BannerData)
 $rows = Val(CsvGet($data,"rows"))
 $a = CsvGet("*","1,")
 MsgOk msg=$a
