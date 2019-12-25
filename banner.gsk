@@ -63,8 +63,6 @@ ENDIF
 
 FILEERASE File=$OutputFile OnError=Continue
 $rows = Val(CsvGet($data,"rows"))
-$a = CsvGet("*","1,")
-MsgOk msg=$a
 $x = 1
 REPEAT
   $x = $x + 1
@@ -90,5 +88,7 @@ REPEAT
   $html = Replace("%LINK%",$link,$html)
   $html = Replace("%IMGURL%",$img,$html)
   $html = Replace("%STYLE%",$style,$html)
+  $html = Replace("%ALT%",$gccode,$html)
+  $html = Replace("%TITLE%",$gccode,$html)
   $r = AppendFile($OutputFile,$html)
 UNTIL $x = $rows
