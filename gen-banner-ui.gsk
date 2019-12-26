@@ -3,13 +3,8 @@
 # MacDescription = Create banners for your founds
 # MacAuthor = CachingFoX
 # MacFileName = banner.gsk
-# MacUrl = https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/banner.gsk
+# MacUrl = https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/gen-banner-ui.gsk
 #*******************************************
-
-
-$Output = "Z:\gsak-banner"
-$OutputFile = $Output+"\banner.html" # $_CurrentDataPath + "\banners.html"
-$OutputFileAll = $Output +"\banner-all.html" # $_CurrentDataPath + "\banners-all.html"
 
 $BannerDataUrlUrl = "https://raw.githubusercontent.com/CachingFoX/gsak-banner/master/data/banners.csv"
 $BannerListFile = $_AppData + "\banner-list.csv"
@@ -42,9 +37,9 @@ ELSE
 ENDIF
 
 
-# Prepair form
+# Prefill form
 $rbtnOutputFile = True
-$folderOutput = $Output
+$editFolderSelect = "Z:\gsak-banner"
 $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
 
 While True
@@ -196,7 +191,7 @@ BEGINSUB name=GenerateBanner
         $style = $style + sqlget("style")
 
         $img = sqlget("imageUrl")
-        
+
         $encodeName = sqlget("name")
         $encodeName = Replace("&","&amp;",$encodeName)
         $encodeName = Replace(chr(34),"&quot;",$encodeName)
@@ -220,7 +215,7 @@ BEGINSUB name=GenerateBanner
 
     $big = addstr(1,"get")
     IF $rbtnOutputFile = True
-        $r = PutFile($OutputFile,$big)
+        $r = PutFile($editFolderSelect+"\banner.html",$big)
         # TODO error check 
         # TODO feedback to user
     ENDIF
@@ -231,38 +226,6 @@ BEGINSUB name=GenerateBanner
 
 ENDSUB
 
-
-FILEERASE File=$OutputFileAll OnError=Continue
-$rows = Val(CsvGet($data,"rows"))
-$x = 1
-REPEAT
-  $x = $x + 1
-  $gccode = CsvGet("*","$x,1")
-  $img = CsvGet("*","$x,2")
-  $link = CsvGet("*","$x,3")
-
-  IF IsEmpty($link) = True
-    $link = "https://coord.info/"+$gccode
-  ENDIF
-  $width = CsvGet("*","$x,4")
-  $height = CsvGet("*","$x,5")
-  $style=""
-  IF IsEmpty($width) = False 
-    $style = $style + "width:"+$width+"px;"
-  ENDIF
-  IF IsEmpty($height) = False 
-    $style = $style + "height:"+$height+"px;"
-  ENDIF
-  $style = $style + CsvGet("*","$x,6")
-
-  $html = $HtmlBannerFragmentTemplate
-  $html = Replace("%LINK%",$link,$html)
-  $html = Replace("%IMGURL%",$img,$html)
-  $html = Replace("%STYLE%",$style,$html)
-  $html = Replace("%ALT%",$gccode,$html)
-  $html = Replace("%TITLE%",$gccode,$html)
-  $r = AppendFile($OutputFileAll,$html)
-UNTIL $x = $rows
 
 <data> VarName=$formMain
 Name = Form1
@@ -304,7 +267,7 @@ Name = btnClose
   Taborder = 2
   Caption = Close
 
-Name = folderOutput
+Name = editFolderSelect
   Type = Folder
   Container = boxOutput
   Height = 21
