@@ -196,7 +196,15 @@ BEGINSUB name=GenerateBanner
         $style = $style + sqlget("style")
 
         $img = sqlget("imageUrl")
-        $title = sqlget("name")+" ("+$gccode+")"
+        
+        $encodeName = sqlget("name")
+        $encodeName = Replace("&","&amp;",$encodeName)
+        $encodeName = Replace(chr(34),"&quot;",$encodeName)
+        $encodeName = Replace("<","&lt;",$encodeName)
+        $encodeName = Replace(">","&gt;",$encodeName)
+        $encodeName = Replace("'","&apos;",$encodeName)
+
+        $title = $encodeName+" ("+$gccode+")"
         $alt = "Banner for "+$title
 
         $html = $HtmlBannerFragmentTemplate
