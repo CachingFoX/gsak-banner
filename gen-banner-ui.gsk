@@ -97,22 +97,6 @@ ELSE
   ENDIF
 ENDIF
 
-# import data into the database
-<data> VarName=$sqlBannerTable
-DROP TABLE IF EXISTS bannerlist;
-CREATE TABLE bannerlist (
-    code varchar(12),
-    imageUrl varchar(255),
-    linkUrl varchar(255),
-    width int,
-    height int,
-    style varchar(255)
-);
-<enddata>
-
-
-
-
 $data = GetFile($BannerListFile)
 IF Equal(Left($data,7),"*error*")
   MsgOk msg=$status
@@ -127,13 +111,6 @@ ELSE
   MsgOk msg=$msg
 ENDIF
 
-<data> VarName=$sqlYourBanners
-SELECT * FROM Caches
-INNER JOIN bannerlist
-ON Caches.Code = bannerlist.code
-WHERE Caches.Found >= 1
-ORDER BY FoundByMeDate ASC
-<enddata>
 
 BEGINSUB name=GenerateBanner
 
@@ -204,6 +181,27 @@ BEGINSUB name=GenerateBanner
     ENDIF
 
 ENDSUB
+
+<data> VarName=$sqlYourBanners
+SELECT * FROM Caches
+INNER JOIN bannerlist
+ON Caches.Code = bannerlist.code
+WHERE Caches.Found >= 1
+ORDER BY FoundByMeDate ASC
+<enddata>
+
+# import data into the database
+<data> VarName=$sqlBannerTable
+DROP TABLE IF EXISTS bannerlist;
+CREATE TABLE bannerlist (
+    code varchar(12),
+    imageUrl varchar(255),
+    linkUrl varchar(255),
+    width int,
+    height int,
+    style varchar(255)
+);
+<enddata>
 
 <data> VarName=$HtmlBannerFragmentTemplate
 <p style="text-align:center;">
