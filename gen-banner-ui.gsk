@@ -40,6 +40,7 @@ CANCEL
 
 BEGINSUB name=CheckForUpdates
     $status = ""
+    $enable = "Yes"
     $metadata = GetUrl($BannerListFingerprintUrl)
     IF Equal(Left($metadata,7),"*error*")
         $status="Cannot load meta info for banner list: "+$metadata
@@ -57,19 +58,19 @@ BEGINSUB name=CheckForUpdates
         # $current_fingerprint = RegExData("[0-9a-f]+",Sqlite("sql",$_sql),0)
         $current_fingerprint = Sqlite("sql",$_sql)
 
-        IF Equal(Left($current_fingerprint,7),"*error*") OR IsEmpty($current_fingerprint)
-            $status = "No local banner list available: "+$current_fingerprint
-            MsgOk msg=$status
+        IF IsEmpty($current_fingerprint)
+            $status = "No local banner list available. Download it."
         ELSE
             IF $current_fingerprint <> $fingerprint
-            $status = "A newer version of the banner list is available"
+                $status = "A newer version of the banner list is available"
             ELSE
-            $status = "Banner list is up-to-date"
+                $status = "Banner list is up-to-date"
+                $enable = "No"
             ENDIF
         ENDIF
     ENDIF
-    $liststatus = $status
-    $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$liststatus)
+    $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
+    $formMain = EditForm($formMain,"btnDownload","Enabled",$enable)
 ENDSUB
 
 
@@ -235,7 +236,7 @@ CREATE TABLE IF NOT EXISTS _gen_banner_metadata (
 <data> VarName=$formMain
 Name = Form1
   Type = Form
-  Height = 296
+  Height = 319
   Width = 500
 
 Name = boxOutput
@@ -243,31 +244,41 @@ Name = boxOutput
   Caption = Output
   Height = 97
   Left = 8
-  Top = 120
+  Top = 144
   Width = 473
   Taborder = 4
 
 Name = boxOptions
   Type = Groupbox
   Caption = Options
-  Height = 49
+  Height = 65
   Left = 8
-  Top = 64
+  Top = 72
   Width = 473
   Taborder = 5
 
-Name = labelBannerListStatus
-  Type = Label
-  Height = 17
+Name = boxBannerData
+  Type = Groupbox
+  Caption = Banner data
+  Height = 57
   Left = 8
   Top = 8
+  Width = 473
+  Taborder = 6
+
+Name = labelBannerListStatus
+  Type = Label
+  Container = boxBannerData
+  Height = 17
+  Left = 16
+  Top = 24
   Width = 34
 
 Name = btnClose
   Type = Button
   Height = 25
   Left = 264
-  Top = 232
+  Top = 256
   Width = 107
   Taborder = 2
   Caption = Close
@@ -285,7 +296,7 @@ Name = btnGenerate
   Type = Button
   Height = 25
   Left = 136
-  Top = 232
+  Top = 256
   Width = 105
   Taborder = 3
   Caption = Generate
@@ -315,9 +326,19 @@ Name = cboxInterSpaceStation
   Container = boxOptions
   Height = 20
   Left = 8
-  Top = 16
+  Top = 24
   Width = 225
   Taborder = 0
   Caption = Fun Banner for the International Space Station
+
+Name = btnDownload
+  Type = Button
+  Container = boxBannerData
+  Height = 25
+  Left = 360
+  Top = 16
+  Width = 105
+  Taborder = 0
+  Caption = Download
 
 <enddata>
