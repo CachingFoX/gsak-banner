@@ -42,14 +42,13 @@ ELSE
 ENDIF
 
 
-
+# Prepair form
 $rbtnOutputFile = True
 $folderOutput = $Output
 $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
 
 While True
   $exit = Form($formMain,"")
-  MsgOk msg=$exit
   BeginCase
     Case $exit = "SystemExit"
       Cancel
@@ -162,55 +161,65 @@ WHERE Caches.Found >= 1
 ORDER BY FoundByMeDate ASC
 <enddata>
 
-BEGINSUB name=btnGenerate
+BEGINSUB name=GenerateBanner
 
-  $big = addstr(1,"clear")
+    $big = addstr(1,"clear")
 
-FILEERASE File=$OutputFile OnError=Continue
-
-# Special Banner: "Ich habe das Listing gelesen/International Space Station"
-#   Banner without found
-$html = $HtmlBannerFragmentTemplate
-$html = Replace("%LINK%","https://coord.info/GC1BE91",$html)
-$html = Replace("%IMGURL%","https://d1u1p2xjjiahg3.cloudfront.net/33cdfdfc-3386-4ebf-8c63-694bf45b5c68.gif",$html)
-$html = Replace("%STYLE%","",$html)
-$html = Replace("%ALT%","Banner for International Space Station (GC1BE91)",$html)
-$html = Replace("%TITLE%","International Space Station (GC1BE91)",$html)
-$r = AppendFile($OutputFile,$html)
+    # Special Banner: "Ich habe das Listing gelesen/International Space Station"
+    #   Banner without found
+    $html = $HtmlBannerFragmentTemplate
+    $html = Replace("%LINK%","https://coord.info/GC1BE91",$html)
+    $html = Replace("%IMGURL%","https://d1u1p2xjjiahg3.cloudfront.net/33cdfdfc-3386-4ebf-8c63-694bf45b5c68.gif",$html)
+    $html = Replace("%STYLE%","",$html)
+    $html = Replace("%ALT%","Banner for International Space Station (GC1BE91)",$html)
+    $html = Replace("%TITLE%","International Space Station (GC1BE91)",$html)
+    $big = addstr(1,"add",$html)
 
 
-$Status = sqlite("sql",$sqlYourBanners,"sqlget=0")
-while not($_sqleol)
-  $gccode = sqlget("code")
-  $link = ""
-  IF IsEmpty($link) = True
-    $link = "https://coord.info/"+$gccode
-  ENDIF
-  $width = sqlget("width")
-  $height = sqlget("height")
-  $style=""
-  IF IsEmpty($width) = False 
-    $style = $style + "width:"+$width+"px;"
-  ENDIF
-  IF IsEmpty($height) = False 
-    $style = $style + "height:"+$height+"px;"
-  ENDIF
-  $style = $style + sqlget("style")
-  $img = sqlget("imageUrl")
 
-  $title = sqlget("name")+" ("+$gccode+")"
-  $alt = "Banner for "+$title
+    $Status = sqlite("sql",$sqlYourBanners,"sqlget=0")
+    WHILE not($_sqleol)
+        $gccode = sqlget("code")
+        $link = ""
+        IF IsEmpty($link) = True
+            $link = "https://coord.info/"+$gccode
+        ENDIF
+        $width = sqlget("width")
+        $height = sqlget("height")
+        $style=""
+        IF IsEmpty($width) = False 
+            $style = $style + "width:"+$width+"px;"
+        ENDIF
+        IF IsEmpty($height) = False 
+            $style = $style + "height:"+$height+"px;"
+        ENDIF
+        $style = $style + sqlget("style")
+        $img = sqlget("imageUrl")
 
-  $html = $HtmlBannerFragmentTemplate
-  $html = Replace("%LINK%",$link,$html)
-  $html = Replace("%IMGURL%",$img,$html)
-  $html = Replace("%STYLE%",$style,$html)
-  $html = Replace("%ALT%",$alt,$html)
-  $html = Replace("%TITLE%",$title,$html)
-  $r = AppendFile($OutputFile,$html)
+        $title = sqlget("name")+" ("+$gccode+")"
+        $alt = "Banner for "+$title
 
-  sqlnext
-Endwhile
+        $html = $HtmlBannerFragmentTemplate
+        $html = Replace("%LINK%",$link,$html)
+        $html = Replace("%IMGURL%",$img,$html)
+        $html = Replace("%STYLE%",$style,$html)
+        $html = Replace("%ALT%",$alt,$html)
+        $html = Replace("%TITLE%",$title,$html)
+        $big = addstr(1,"add",$html)
+ 
+        SQLNEXT
+    ENDWHILE
+
+    $big = addstr(1,"get")
+    IF $rbtnOutputFile = True
+        $r = PutFile($OutputFile,$big)
+        # TODO error check 
+        # TODO feedback to user
+    ENDIF
+    IF $rbtnOuputClipboard = True
+        CLIP Data=$big
+        # TODO feddback to user 
+    ENDIF
 
 ENDSUB
 
