@@ -39,47 +39,26 @@ ENDIF
 
 # Prefill form
 $rbtnOutputFile = True
-$editFolderSelect = "Z:\gsak-banner"
+MacSettings Type=R FileCheck=N
 $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
 
 While True
-  $exit = Form($formMain,"")
-  BeginCase
-    Case $exit = "SystemExit"
-      Cancel
-    Case $exit = "btnClose"
-      Cancel
-    Case $exit = "btnGenerate"
-      GOSUB name=GenerateBanner
-
-    Case $exit = "btnCreateWeekPublishReport"
-      GOSUB name=subCreateWeekPublishReport
-   Case $exit = "btnCheckNewPublishedVirtuals"
-      GOSUB name=subCheckForNewVirtuals
-    Case $exit = "Dish"
-      BeginCase
-        Case $Dish = "None"
-          $Form = EditForm($Form,"Label1","Caption","Nothing Selected")
-        Case $Dish = "Steak"
-          $Form = EditForm($Form,"Label1","Caption","Available Monday Only")
-        Case $Dish = "Lamb"
-          $Form = EditForm($Form,"Label1","Caption","Available Mon, Wed, Fri")
-        Case $Dish = "Fish"
-          $Form = EditForm($Form,"Label1","Caption","Available Thu, Sat")
-      EndCase
-   EndCase
+    $exit = Form($formMain,"")
+    BeginCase
+        Case $exit = "SystemExit"
+            Cancel
+        Case $exit = "btnClose"
+            Cancel
+        Case $exit = "btnGenerate"
+            MacSettings Type=S Vars=rbtnOutputFile,rbtnOutputClipboard,editFolderSelect,cboxInterSpaceStation
+            GOSUB name=GenerateBanner
+    EndCase
 EndWhile
 
 
 
 
-<data> VarName=$HtmlBannerFragmentTemplate
-<p style="text-align:center;">
-  <a href="%LINK%" target="_blank">
-    <img src="%IMGURL%" style="%STYLE%" title="%TITLE%" alt="%ALT%"/>
-  </a>
-</p>
-<enddata>
+
 
 
 
@@ -219,13 +198,20 @@ BEGINSUB name=GenerateBanner
         # TODO error check 
         # TODO feedback to user
     ENDIF
-    IF $rbtnOuputClipboard = True
+    IF $rbtnOutputClipboard = True
         CLIP Data=$big
         # TODO feddback to user 
     ENDIF
 
 ENDSUB
 
+<data> VarName=$HtmlBannerFragmentTemplate
+<p style="text-align:center;">
+  <a href="%LINK%" target="_blank">
+    <img src="%IMGURL%" style="%STYLE%" title="%TITLE%" alt="%ALT%"/>
+  </a>
+</p>
+<enddata>
 
 <data> VarName=$formMain
 Name = Form1
@@ -295,7 +281,7 @@ Name = rbtnOutputFile
   Taborder = 1
   Caption = Filesystem
 
-Name = rbtnOuputClipboard
+Name = rbtnOutputClipboard
   Type = Radiobutton
   Container = boxOutput
   Height = 20
