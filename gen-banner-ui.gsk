@@ -64,10 +64,18 @@ BEGINSUB name=CheckForUpdates
                 $status = "Banner list is up-to-date. Have fun!"
                 $enable = "No"
             ENDIF
+            
             $date = sqlite("sql","SELECT timestamp FROM _gen_banner_metadata WHERE key='fingerprint'")
             $formMain = EditForm($formMain,"txtDownloadDate","Caption",$date)
+            
             $count = sqlite("sql","SELECT count(*) FROM bannerlist")
             $formMain = EditForm($formMain,"txtNumBanner","Caption",$count)
+
+            $sql = Replace("%FIELDS%","count(*) as matches",$sqlYourBanners)
+            $matches = sqlite("sql",$sql,"sqlget=0")
+            $matches = sqlget("matches")
+            $formMain = EditForm($formMain,"txtNumMatches","Caption",$matches)
+            
         ENDIF
     ENDIF
     $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
@@ -124,7 +132,8 @@ BEGINSUB name=GenerateBanner
         $big = addstr(1,"add",$html)
     ENDIF
 
-    $Status = sqlite("sql",$sqlYourBanners,"sqlget=0")
+    $sql = Replace("%FIELDS%","*",$sqlYourBanners)
+    $Status = sqlite("sql",$sql,"sqlget=0")
     WHILE not($_sqleol)
         $gccode = sqlget("code")
         $link = ""
@@ -180,7 +189,7 @@ BEGINSUB name=GenerateBanner
 ENDSUB
 
 <data> VarName=$sqlYourBanners
-SELECT * FROM Caches
+SELECT %FIELDS% FROM Caches
     INNER JOIN bannerlist
     ON Caches.Code = bannerlist.code
     WHERE Caches.Found >= 1
@@ -369,4 +378,31 @@ Name = txtNumBanner
   Width = 25
   Caption = n/a
 
+Name = HTMLabel2
+  Type = Label
+  Height = 17
+  Left = 34
+  Top = 58
+  Width = 82
+  Caption = Download Date
+
+Name = Label2
+  Type = Label
+  Container = boxBannerData
+  Height = 17
+  Left = 208
+  Top = 72
+  Width = 71
+  Caption = # of Matches
+
+Name = txtNumMatches
+  Type = Label
+  Container = boxBannerData
+  Height = 17
+  Left = 312
+  Top = 72
+  Width = 25
+  Caption = n/a
+
 <enddata>
+
