@@ -11,51 +11,66 @@ $BannerListFile = $_AppData + "\banner-list.csv"
 $BannerListFingerprintUrl = "https://api.github.com/repos/CachingFoX/gsak-banner/contents/data?ref=master"
 $BannerListFingerprintFile = $_AppData + "\banner-list.fingerprint"
 
-$status = ""
-$metadata = GetUrl($BannerListFingerprintUrl)
-IF Equal(Left($metadata,7),"*error*")
-  $status="Cannot load meta info for banner list: "+$metadata
-ELSE
-  $expression = quote("size")+"\s*:\s*\d*"
-  $match = RegExData($expression,$metadata,0)
-  $size = RegExData("\d*",$match,0)
-
-  $expression = quote("sha")+"\s*:\s*"+quote("[0-9a-f]+")
-  $match = RegExData($expression,$metadata,0)
-  $fingerprint = RegExData("[0-9a-f]+",$match,0)
-
-  $current_fingerprint = GetFile($BannerListFingerprintFile)
-  IF Left($current_fingerprint,7) = "*Error*"
-    $status = "No local banner list available: "+$current_fingerprint
-  ELSE
-    IF $current_fingerprint <> $fingerprint
-      $status = "A newer version of the banner list is available"
-    ELSE
-      $status = "Banner list is up-to-date"
-    ENDIF
-  ENDIF
-ENDIF
-
+# -----------------------------------------------
+#  Prepare database
+#
+$status = sqlite("sql",$sqlTableBannerList,"sqlget=0")
+$status = sqlite("sql",$sqlTableBannerMetadata,"sqlget=0")
 
 # Prefill form
 $rbtnOutputFile = True
 MacSettings Type=R FileCheck=N
-$formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
+GOSUB name=CheckForUpdates
+
 
 While True
     $exit = Form($formMain,"")
     BeginCase
         Case $exit = "SystemExit"
-            Cancel
+            CANCEL
         Case $exit = "btnClose"
-            Cancel
+            CANCEL
         Case $exit = "btnGenerate"
             MacSettings Type=S Vars=rbtnOutputFile,rbtnOutputClipboard,editFolderSelect,cboxInterSpaceStation
             GOSUB name=GenerateBanner
     EndCase
 EndWhile
+CANCEL
 
 
+BEGINSUB name=CheckForUpdates
+    $status = ""
+    $metadata = GetUrl($BannerListFingerprintUrl)
+    IF Equal(Left($metadata,7),"*error*")
+        $status="Cannot load meta info for banner list: "+$metadata
+    ELSE
+        $expression = quote("size")+"\s*:\s*\d*"
+        $match = RegExData($expression,$metadata,0)
+        $size = RegExData("\d*",$match,0)
+
+        $expression = quote("sha")+"\s*:\s*"+quote("[0-9a-f]+")
+        $match = RegExData($expression,$metadata,0)
+        $fingerprint = RegExData("[0-9a-f]+",$match,0)
+
+        # $current_fingerprint = GetFile($BannerListFingerprintFile)
+        $_sql = "SELECT value FROM _gen_banner_metadata WHERE key='fingerprint'"
+        # $current_fingerprint = RegExData("[0-9a-f]+",Sqlite("sql",$_sql),0)
+        $current_fingerprint = Sqlite("sql",$_sql)
+
+        IF Equal(Left($current_fingerprint,7),"*error*") OR IsEmpty($current_fingerprint)
+            $status = "No local banner list available: "+$current_fingerprint
+            MsgOk msg=$status
+        ELSE
+            IF $current_fingerprint <> $fingerprint
+            $status = "A newer version of the banner list is available"
+            ELSE
+            $status = "Banner list is up-to-date"
+            ENDIF
+        ENDIF
+    ENDIF
+    $liststatus = $status
+    $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$liststatus)
+ENDSUB
 
 
 
@@ -102,7 +117,7 @@ IF Equal(Left($data,7),"*error*")
   MsgOk msg=$status
   CANCEL
 ELSE
-  $status = sqlite("sql",$sqlBannerTable,"sqlget=0")
+  $status = sqlite("sql","DELETE FROM bannerlist","sqlget=0")
   #$status = sqlite("sql","END TRANSACTION","halt=Trap")
   $status = sqlite("import",$data,"table=bannerlist delim=,")
   $status = sqlite("sql","DELETE FROM bannerlist WHERE code='code';")
@@ -191,15 +206,21 @@ ORDER BY FoundByMeDate ASC
 <enddata>
 
 # import data into the database
-<data> VarName=$sqlBannerTable
-DROP TABLE IF EXISTS bannerlist;
-CREATE TABLE bannerlist (
+<data> VarName=$sqlTableBannerList
+CREATE TABLE IF NOT EXISTS bannerlist (
     code varchar(12),
     imageUrl varchar(255),
     linkUrl varchar(255),
     width int,
     height int,
     style varchar(255)
+);
+<enddata>
+<data> VarName=$sqlTableBannerMetadata
+CREATE TABLE IF NOT EXISTS _gen_banner_metadata (
+    key varchar(255) UNIQUE,
+    value varchar(255),
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 <enddata>
 
