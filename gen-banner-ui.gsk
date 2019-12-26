@@ -165,17 +165,16 @@ BEGINSUB name=GenerateBanner
 
     $big = addstr(1,"clear")
 
-    # Special Banner: "Ich habe das Listing gelesen/International Space Station"
-    #   Banner without found
-    $html = $HtmlBannerFragmentTemplate
-    $html = Replace("%LINK%","https://coord.info/GC1BE91",$html)
-    $html = Replace("%IMGURL%","https://d1u1p2xjjiahg3.cloudfront.net/33cdfdfc-3386-4ebf-8c63-694bf45b5c68.gif",$html)
-    $html = Replace("%STYLE%","",$html)
-    $html = Replace("%ALT%","Banner for International Space Station (GC1BE91)",$html)
-    $html = Replace("%TITLE%","International Space Station (GC1BE91)",$html)
-    $big = addstr(1,"add",$html)
-
-
+    # Fun Banner: "Ich habe das Listing gelesen/International Space Station"
+    IF $cboxInterSpaceStation = True
+        $html = $HtmlBannerFragmentTemplate
+        $html = Replace("%LINK%","https://coord.info/GC1BE91",$html)
+        $html = Replace("%IMGURL%","https://d1u1p2xjjiahg3.cloudfront.net/33cdfdfc-3386-4ebf-8c63-694bf45b5c68.gif",$html)
+        $html = Replace("%STYLE%","",$html)
+        $html = Replace("%ALT%","Banner for International Space Station (GC1BE91)",$html)
+        $html = Replace("%TITLE%","International Space Station (GC1BE91)",$html)
+        $big = addstr(1,"add",$html)
+    ENDIF
 
     $Status = sqlite("sql",$sqlYourBanners,"sqlget=0")
     WHILE not($_sqleol)
@@ -184,6 +183,7 @@ BEGINSUB name=GenerateBanner
         IF IsEmpty($link) = True
             $link = "https://coord.info/"+$gccode
         ENDIF
+
         $width = sqlget("width")
         $height = sqlget("height")
         $style=""
@@ -194,8 +194,8 @@ BEGINSUB name=GenerateBanner
             $style = $style + "height:"+$height+"px;"
         ENDIF
         $style = $style + sqlget("style")
-        $img = sqlget("imageUrl")
 
+        $img = sqlget("imageUrl")
         $title = sqlget("name")+" ("+$gccode+")"
         $alt = "Banner for "+$title
 
@@ -259,8 +259,26 @@ UNTIL $x = $rows
 <data> VarName=$formMain
 Name = Form1
   Type = Form
-  Height = 300
+  Height = 296
   Width = 500
+
+Name = boxOutput
+  Type = Groupbox
+  Caption = Output
+  Height = 97
+  Left = 8
+  Top = 120
+  Width = 473
+  Taborder = 4
+
+Name = boxOptions
+  Type = Groupbox
+  Caption = Options
+  Height = 49
+  Left = 8
+  Top = 64
+  Width = 473
+  Taborder = 5
 
 Name = labelBannerListStatus
   Type = Label
@@ -277,15 +295,6 @@ Name = btnClose
   Width = 107
   Taborder = 2
   Caption = Close
-
-Name = boxOutput
-  Type = Groupbox
-  Caption = Output
-  Height = 97
-  Left = 8
-  Top = 120
-  Width = 473
-  Taborder = 4
 
 Name = folderOutput
   Type = Folder
@@ -324,4 +333,15 @@ Name = rbtnOuputClipboard
   Width = 98
   Taborder = 2
   Caption = Clipboard
+
+Name = cboxInterSpaceStation
+  Type = Checkbox
+  Container = boxOptions
+  Height = 20
+  Left = 8
+  Top = 16
+  Width = 225
+  Taborder = 0
+  Caption = Fun Banner for the International Space Station
+
 <enddata>
