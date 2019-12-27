@@ -30,7 +30,7 @@ While True
         Case $exit = "btnDownload"
             GOSUB name=DownloadBannerList            
         Case $exit = "btnGenerate"
-            MacSettings Type=S Vars=rbtnOutputFile,rbtnOutputClipboard,editFolderSelect,cboxInterSpaceStation,optOrder
+            MacSettings Type=S Vars=rbtnOutputFile,rbtnOutputClipboard,editFileSelect,cboxInterSpaceStation,optOrder
             GOSUB name=GenerateBanner
     EndCase
 EndWhile
@@ -191,7 +191,7 @@ BEGINSUB name=GenerateBanner
 
     $big = addstr(1,"get")
     IF $rbtnOutputFile = True
-        $r = PutFile($editFolderSelect+"\banner.html",$big)
+        $result = PutFile($editFileSelect,$big)
         # TODO error check 
         # TODO feedback to user
     ENDIF
@@ -280,8 +280,8 @@ Name = btnClose
   Taborder = 2
   Caption = Close
 
-Name = editFolderSelect
-  Type = Folder
+Name = editFileSelect
+  Type = File
   Container = boxOutput
   Height = 21
   Left = 24
