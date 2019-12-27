@@ -28,7 +28,13 @@ While True
         Case $exit = "btnClose"
             CANCEL
         Case $exit = "btnDownload"
-            GOSUB name=DownloadBannerList            
+            GOSUB name=DownloadBannerList
+            GOSUB name=CheckForUpdates 
+        Case $exit = "btnCheckUpdate"
+            GOSUB name=CheckForUpdates
+        Case $exit = "btnSwipeOut"
+            GOSUB name=SwipeOut
+            GOSUB name=CheckForUpdates     
         Case $exit = "btnGenerate"
             MacSettings Type=S Vars=rbtnOutputFile,rbtnOutputClipboard,editFileSelect,cboxInterSpaceStation,optOrder
             GOSUB name=GenerateBanner
@@ -57,6 +63,12 @@ BEGINSUB name=CheckForUpdates
 
         IF IsEmpty($current_fingerprint)
             $status = "No local banner list available. Download it."
+
+            $formMain = EditForm($formMain,"txtDownloadDate","Caption","n/a")
+            $formMain = EditForm($formMain,"txtFingerprint","Caption","n/a")
+            $formMain = EditForm($formMain,"txtNumBanner","Caption","n/a")
+            $formMain = EditForm($formMain,"txtNumMatches","Caption","n/a")
+            $formMain = EditForm($formMain,"btnGenerate","Enabled","No")
         ELSE
             IF $current_fingerprint <> $fingerprint
                 $status = "A newer version of the banner list is available."
@@ -65,19 +77,25 @@ BEGINSUB name=CheckForUpdates
                 $enable = "No"
             ENDIF
             
-            $date = sqlite("sql","SELECT timestamp FROM _gen_banner_metadata WHERE key='fingerprint'")
-            $formMain = EditForm($formMain,"txtDownloadDate","Caption",$date)
-            
-            $count = sqlite("sql","SELECT count(*) FROM bannerlist")
-            $formMain = EditForm($formMain,"txtNumBanner","Caption",$count)
+            $data = sqlite("sql","SELECT timestamp FROM _gen_banner_metadata WHERE key='fingerprint'")
+            $formMain = EditForm($formMain,"txtDownloadDate","Caption",$data)
+
+            $data = sqlite("sql","SELECT value FROM _gen_banner_metadata WHERE key='fingerprint'")
+            $formMain = EditForm($formMain,"txtFingerprint","Caption",$data)
+
+            $data = sqlite("sql","SELECT count(*) FROM bannerlist")
+            $formMain = EditForm($formMain,"txtNumBanner","Caption",$data)
 
             $sql = $sqlYourBanners
             $sql = Replace("%FIELDS%","count(*) as matches",$sql)
             $sql = Replace("%ORDER%","",$sql)
             $matches = sqlite("sql",$sql,"sqlget=0")
             $matches = sqlget("matches")
-            SqlGetClose Handle=0
             $formMain = EditForm($formMain,"txtNumMatches","Caption",$matches)
+
+            $formMain = EditForm($formMain,"btnGenerate","Enabled","Yes")
+
+            SqlGetClose Handle=0
             
         ENDIF
     ENDIF
@@ -114,11 +132,12 @@ BEGINSUB name=DownloadBannerList
     
     $status = Sqlite("sql","DELETE FROM _gen_banner_metadata WHERE key='fingerprint'")
     $status = Sqlite("sql","INSERT INTO _gen_banner_metadata (key,value) VALUES('fingerprint','$fingerprint')")
-
-    GOSUB name=CheckForUpdates
 ENDSUB
 
-
+BEGINSUB name=SwipeOut
+    $status = sqlite("sql","DELETE FROM bannerlist","sqlget=0")
+    $status = Sqlite("sql","DELETE FROM _gen_banner_metadata WHERE key='fingerprint'")
+ENDSUB
 
 BEGINSUB name=GenerateBanner
 
@@ -241,15 +260,15 @@ CREATE TABLE IF NOT EXISTS _gen_banner_metadata (
 <data> VarName=$formMain
 Name = Form1
   Type = Form
-  Height = 377
-  Width = 500
+  Height = 502
+  Width = 499
 
 Name = boxOutput
   Type = Groupbox
   Caption = Output
   Height = 97
   Left = 8
-  Top = 208
+  Top = 328
   Width = 473
   Taborder = 4
 
@@ -271,11 +290,20 @@ Name = boxBannerData
   Width = 473
   Taborder = 6
 
+Name = Groupbox1
+  Type = Groupbox
+  Caption = Export Options
+  Height = 105
+  Left = 8
+  Top = 200
+  Width = 473
+  Taborder = 7
+
 Name = btnClose
   Type = Button
   Height = 25
   Left = 264
-  Top = 312
+  Top = 432
   Width = 107
   Taborder = 2
   Caption = Close
@@ -291,9 +319,10 @@ Name = editFileSelect
 
 Name = btnGenerate
   Type = Button
+  Enabled = No
   Height = 25
   Left = 136
-  Top = 312
+  Top = 432
   Width = 105
   Taborder = 3
   Caption = Generate
@@ -431,5 +460,60 @@ Name = Label5
   Width = 106
   Caption = Banners are order by
 
-<enddata>
+Name = optBranch
+  Type = Combobox
+  Container = Groupbox1
+  Height = 21
+  Left = 120
+  Top = 24
+  Values = stable;master
+  Width = 177
+  Taborder = 0
 
+Name = Label6
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 16
+  Top = 27
+  Width = 98
+  Caption = Branch for updates
+
+Name = btnCheckUpdate
+  Type = Button
+  Container = Groupbox1
+  Height = 25
+  Left = 312
+  Top = 22
+  Width = 145
+  Taborder = 1
+  Caption = Check for Updates
+
+Name = btnSwipeOut
+  Type = Button
+  Container = Groupbox1
+  Height = 25
+  Left = 312
+  Top = 56
+  Width = 145
+  Taborder = 2
+  Caption = Swipe out
+
+Name = Label7
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 16
+  Top = 56
+  Width = 57
+  Caption = Fingerprint
+
+Name = txtFingerprint
+  Type = Label
+  Container = Groupbox1
+  Height = 17
+  Left = 16
+  Top = 80
+  Width = 34
+
+<enddata>
