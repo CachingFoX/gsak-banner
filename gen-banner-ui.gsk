@@ -78,7 +78,7 @@ BEGINSUB name=CheckForUpdates
             
         ENDIF
     ENDIF
-    $formMain = EditForm($formMain,"labelBannerListStatus","Caption",$status)
+    $formMain = EditForm($formMain,"txtBannerListStatus","Caption",$status)
     $formMain = EditForm($formMain,"btnDownload","Enabled",$enable)
 ENDSUB
 
@@ -257,15 +257,6 @@ Name = boxBannerData
   Width = 473
   Taborder = 6
 
-Name = labelBannerListStatus
-  Type = Label
-  Container = boxBannerData
-  Height = 17
-  Left = 56
-  Top = 24
-  Width = 52
-  Caption = unknown
-
 Name = btnClose
   Type = Button
   Height = 25
@@ -333,24 +324,6 @@ Name = btnDownload
   Taborder = 0
   Caption = Download
 
-Name = Label1
-  Type = Label
-  Container = boxBannerData
-  Height = 17
-  Left = 24
-  Top = 48
-  Width = 82
-  Caption = Download Date
-
-Name = txtDownloadDate
-  Type = Label
-  Container = boxBannerData
-  Height = 17
-  Left = 128
-  Top = 48
-  Width = 25
-  Caption = n/a
-
 Name = Label3
   Type = Label
   Container = boxBannerData
@@ -360,6 +333,33 @@ Name = Label3
   Width = 41
   Caption = Status:
 
+Name = txtBannerListStatus
+  Type = Label
+  Container = boxBannerData
+  Height = 17
+  Left = 56
+  Top = 24
+  Width = 52
+  Caption = unknown
+
+Name = Label1
+  Type = Label
+  Container = boxBannerData
+  Height = 17
+  Left = 24
+  Top = 48
+  Width = 82
+  Caption = # of Banner
+
+Name = txtNumBanner
+  Type = Label
+  Container = boxBannerData
+  Height = 17
+  Left = 128
+  Top = 48
+  Width = 25
+  Caption = n/a
+
 Name = Label4
   Type = Label
   Container = boxBannerData
@@ -367,9 +367,9 @@ Name = Label4
   Left = 24
   Top = 72
   Width = 64
-  Caption = # of Banner
+  Caption = # of Matches
 
-Name = txtNumBanner
+Name = txtNumMatches
   Type = Label
   Container = boxBannerData
   Height = 17
@@ -378,14 +378,6 @@ Name = txtNumBanner
   Width = 25
   Caption = n/a
 
-Name = HTMLabel2
-  Type = Label
-  Height = 17
-  Left = 34
-  Top = 58
-  Width = 82
-  Caption = Download Date
-
 Name = Label2
   Type = Label
   Container = boxBannerData
@@ -393,9 +385,9 @@ Name = Label2
   Left = 208
   Top = 72
   Width = 71
-  Caption = # of Matches
+  Caption = Download Date
 
-Name = txtNumMatches
+Name = txtDownloadDate
   Type = Label
   Container = boxBannerData
   Height = 17
