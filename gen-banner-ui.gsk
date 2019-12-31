@@ -50,13 +50,22 @@ CANCEL
 
 BEGINSUB name=CheckForUpdates
     $status = ""
-    $enable = "Yes"
+
+    $fingerprint_new = "n/a"
+    $fingerprint_current = "n/a"
+    $download_date = "n/a"
+    $size = "n/a"
+    $enable_generate = "No"
+    $enable_download = "No"
+    $number_of_banner = "n/a"
+    $number_of_matches = "n/a"
+    $updateMessageStyle = ""
 
     $url = Replace("%BRANCH%",$optBranch,$BannerListFingerprintUrl)
     $metadata = GetUrl($url)
     IF Equal(Left($metadata,7),"*error*")
-        $status="Cannot load meta info for banner list: "+$metadata
-        $formMain = EditForm($formMain,"txtFingerprintFound","Caption","n/a")
+        MsgOk msg="Get update information failed.\n\n"+$metadata
+        $updateMessageStyle="bold"
     ELSE
         $expression = quote("size")+"\s*:\s*\d*"
         $match = RegExData($expression,$metadata,0)
@@ -64,54 +73,51 @@ BEGINSUB name=CheckForUpdates
 
         $expression = quote("sha")+"\s*:\s*"+quote("[0-9a-f]+")
         $match = RegExData($expression,$metadata,0)
-        $fingerprint = RegExData("[0-9a-f]+",$match,0)
+        $fingerprint_new = RegExData("[0-9a-f]+",$match,0)
+    ENDIF
 
-        $formMain = EditForm($formMain,"txtFingerprintFound","Caption",$fingerprint)
+    $fingerprint_current = Sqlite("sql","SELECT value FROM _gen_banner_metadata WHERE key='fingerprint'")
 
-        $_sql = "SELECT value FROM _gen_banner_metadata WHERE key='fingerprint'"
-        $current_fingerprint = Sqlite("sql",$_sql)
-
-        IF IsEmpty($current_fingerprint)
-            $status = "No local banner list available. Download it."
-
-            $formMain = EditForm($formMain,"txtDownloadDate","Caption","n/a")
-            $formMain = EditForm($formMain,"txtFingerprint","Caption","n/a")
-            $formMain = EditForm($formMain,"txtNumBanner","Caption","n/a")
-            $formMain = EditForm($formMain,"txtNumMatches","Caption","n/a")
-            $formMain = EditForm($formMain,"btnGenerate","Enabled","No")
-            
-        ELSE
-            IF $current_fingerprint <> $fingerprint
+    IF IsEmpty($fingerprint_current)
+        $status = "No local banner list available. Download it."
+        $fingerprint_current = "n/a"
+        $enable_download = "Yes"
+        $updateMessageStyle="bold"
+    ELSE
+        IF $fingerprint_new <> "n/a"
+            IF $fingerprint_current <> $fingerprint_new
                 $status = "A newer version of the banner list is available."
+                $enable_download = "Yes"
+                $updateMessageStyle="bold"
             ELSE
                 $status = "Banner list is up-to-date. Have fun!"
-                $enable = "No"
             ENDIF
-            
-            $data = sqlite("sql","SELECT timestamp FROM _gen_banner_metadata WHERE key='fingerprint'")
-            $formMain = EditForm($formMain,"txtDownloadDate","Caption",$data)
-
-            $data = sqlite("sql","SELECT value FROM _gen_banner_metadata WHERE key='fingerprint'")
-            $formMain = EditForm($formMain,"txtFingerprint","Caption",$data)
-
-            $data = sqlite("sql","SELECT count(*) FROM bannerlist")
-            $formMain = EditForm($formMain,"txtNumBanner","Caption",$data)
-
-            $sql = $sqlYourBanners
-            $sql = Replace("%FIELDS%","count(*) as matches",$sql)
-            $sql = Replace("%ORDER%","",$sql)
-            $matches = sqlite("sql",$sql,"sqlget=0")
-            $matches = sqlget("matches")
-            $formMain = EditForm($formMain,"txtNumMatches","Caption",$matches)
-
-            $formMain = EditForm($formMain,"btnGenerate","Enabled","Yes")
-
-            SqlGetClose Handle=0
-            
+        ELSE
+            $status = "Get update information failed"
+            $updateMessageStyle="bold"
         ENDIF
+        
+        $download_date = sqlite("sql","SELECT timestamp FROM _gen_banner_metadata WHERE key='fingerprint'")
+        $number_of_banner = sqlite("sql","SELECT count(*) FROM bannerlist")
+
+        $sql = $sqlYourBanners
+        $sql = Replace("%FIELDS%","count(*) as matches",$sql)
+        $sql = Replace("%ORDER%","",$sql)
+        $matches = sqlite("sql",$sql,"sqlget=0")
+        $number_of_matches = sqlget("matches")
+
+        $enable_generate = "Yes"
     ENDIF
+
+    $formMain = EditForm($formMain,"txtNumBanner","Caption",$number_of_banner)
+    $formMain = EditForm($formMain,"txtNumMatches","Caption",$number_of_matches)
+    $formMain = EditForm($formMain,"txtDownloadDate","Caption",$download_date)
+    $formMain = EditForm($formMain,"txtFingerprintNew","Caption",$fingerprint_new)
+    $formMain = EditForm($formMain,"txtFingerprint","Caption",$fingerprint_current)
     $formMain = EditForm($formMain,"txtBannerListStatus","Caption",$status)
-    $formMain = EditForm($formMain,"btnDownload","Enabled",$enable)
+    $formMain = EditForm($formMain,"txtBannerListStatus","Style",$updateMessageStyle)
+    $formMain = EditForm($formMain,"btnDownload","Enabled",$enable_download)
+    $formMain = EditForm($formMain,"btnGenerate","Enabled",$enable_generate)
 ENDSUB
 
 
@@ -550,7 +556,7 @@ Name = btnCopyBranchUrl
   Taborder = 3
   Caption = Copy branch URL
 
-Name = txtFingerprintFound
+Name = txtFingerprintNew
   Type = Label
   Container = Groupbox1
   Height = 17
